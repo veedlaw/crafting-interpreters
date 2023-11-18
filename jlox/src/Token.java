@@ -2,6 +2,7 @@ public class Token {
     final TokenType type;
     final String lexeme;
     final Object literal;
+    // Track which line a token appears on
     final int line;
 
     Token(TokenType type, String lexeme, Object literal, int line) {
@@ -12,6 +13,6 @@ public class Token {
     }
 
     public String toString() {
-        return type + " " + lexeme + " " + literal;
+        return "Token(type=" + type + ", lexeme='" + lexeme + "', literal=" + literal + ")";
     }
 }
