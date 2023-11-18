@@ -64,9 +64,23 @@ public class Scanner {
                 }
                 break;
 
-            default:
-                Lox.error(line, "Unexpected character.");
+            // Ignore whitespace.
+            case ' ':
+            case '\r':
+            case '\t':
                 break;
+            case '\n':
+                line++;
+                break;
+            case '"': string(); break;
+
+            default:
+                if (isDigit(c)) {
+                    number();
+                } else {
+                    Lox.error(line, "Unexpected character.");
+                    break;
+                }
         }
     }
 
@@ -89,6 +103,11 @@ public class Scanner {
         return source.charAt(current);
     }
 
+    private char peekNext() {
+        if (current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
+    }
+
     /**
      * Peeks at the next character from the current one and returns whether
      * the argument matches the next character.
@@ -104,6 +123,48 @@ public class Scanner {
         }
         current++;
         return true;
+    }
+
+    /**
+     * Parse the source for a string token and add the token to the running
+     * list of tokens.
+     */
+    private void string() {
+        // Read the string until we peek a " character or reach the end of source
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') {
+                line++;
+            }
+            advance();
+        }
+
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated string.");
+        }
+
+        // Consume the closing "
+        advance();
+
+        // Capture the string value inside the quotes
+        String value = source.substring(start + 1, current - 1);
+        addToken(TokenType.STRING, value);
+    }
+
+    private void number() {
+        while (isDigit(peek())) {
+            advance();
+        }
+        // Handle the fractional part
+        if (peek() == '.' && isDigit(peekNext())) {
+            advance();  // Consume the dot
+
+            while (isDigit(peek())) {
+                advance();
+            }
+        }
+
+        String value = source.substring(start, current);
+        addToken(TokenType.NUMBER, value);
     }
 
     /**
@@ -130,5 +191,9 @@ public class Scanner {
      */
     private boolean isAtEnd() {
         return current >= source.length();
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
     }
 }
